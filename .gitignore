@@ -1,0 +1,37 @@
+# ===== 個人情報・測定データ（絶対にGitHubに上げない） =====
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.tsv
+*.json.bak
+*.pdf
+*.docx
+*.numbers
+data/
+export/
+exports/
+backup/
+
+# ===== 秘密の情報（合言葉・URL・キーなど） =====
+.env
+.env.*
+config.local.*
+secret*
+*.secret
+*.key
+*.pem
+.clasp.json
+.clasprc.json
+
+# ===== Mac・エディタが自動で作るファイル =====
+.DS_Store
+._*
+.vscode/
+.idea/
+*.swp
+
+# ===== 開発用 =====
+node_modules/
+.claude/settings.local.json
+tools/__pycache__/
