@@ -72,6 +72,62 @@
           </div>
         </div>
 
+        <div class="field">
+          <span class="label">利き手</span>
+          <div id="hand" class="choices"></div>
+        </div>
+
+        <div class="field">
+          <span class="label">利き脚</span>
+          <div id="foot" class="choices"></div>
+        </div>
+
+        <h2 class="section-title">既往歴</h2>
+
+        <div class="field">
+          <span class="label">ケガ</span>
+          <div>
+            <div id="injury" class="choices"></div>
+            <div id="injury-detail" class="sub" hidden>
+              <div class="sub-row">
+                <span class="sub-label">場所</span>
+                <div>
+                  <div id="injury-part" class="choices"></div>
+                  <input id="injury-part-other" type="text" class="other-input" placeholder="場所を入力" hidden>
+                </div>
+              </div>
+              <div class="sub-row">
+                <span class="sub-label">状態</span>
+                <div>
+                  <div id="injury-type" class="choices"></div>
+                  <input id="injury-type-other" type="text" class="other-input" placeholder="ケガの状態を入力" hidden>
+                </div>
+              </div>
+              <div class="sub-row">
+                <span class="sub-label">現在の状態</span>
+                <div id="injury-now" class="choices"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label">疾患</span>
+          <div>
+            <div id="disease" class="choices"></div>
+            <div id="disease-detail" class="sub" hidden>
+              <div class="sub-row">
+                <label class="sub-label" for="disease-name">疾患名</label>
+                <input id="disease-name" type="text" autocomplete="off" placeholder="例：喘息">
+              </div>
+              <div class="sub-row">
+                <span class="sub-label">現在の状態</span>
+                <div id="disease-now" class="choices"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="actions">
           <button id="btn-clear" type="button" class="btn ghost">クリア</button>
           <button id="btn-start" type="button" class="btn primary big">チェック開始 →</button>

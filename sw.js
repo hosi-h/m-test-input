@@ -1,6 +1,6 @@
 // オフラインで起動できるよう、画面のファイル一式をiPadにしまっておく。
 // 画面を更新したら CACHE の番号を上げること（iPad側が新しい版に入れ替わる）。
-const CACHE = 'mtest-input-v1.0.0';
+const CACHE = 'mtest-input-v1.1.0';
 const FILES = [
   './',
   './index.html',

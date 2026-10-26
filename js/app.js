@@ -23,7 +23,12 @@
   function newState() {
     return {
       screen: 'info',
-      info: { name: '', by: '', bm: '', bd: '', sex: '', sport: '', sportOther: '', position: '', positionOther: '' },
+      info: {
+        name: '', by: '', bm: '', bd: '', sex: '', sport: '', sportOther: '', position: '', positionOther: '',
+        hand: '', foot: '',
+        injury: '', injuryPart: '', injuryPartOther: '', injuryType: '', injuryTypeOther: '', injuryNow: '',
+        disease: '', diseaseName: '', diseaseNow: '',
+      },
       checks: {},
     };
   }
@@ -51,8 +56,30 @@
   }
   function birthText(i) { return i.by && i.bm && i.bd ? `${i.by}/${pad(i.bm)}/${pad(i.bd)}` : ''; }
   function personKey(name, birth) { return `${normName(name)}|${birth}`; }
-  function sportValue(i) { return i.sport === OTHER ? (i.sportOther.trim() || OTHER) : i.sport; }
-  function positionValue(i) { return i.position === OTHER ? (i.positionOther.trim() || OTHER) : i.position; }
+  function otherValue(v, other) { return v === OTHER ? (other.trim() || OTHER) : v; }
+  function sportValue(i) { return otherValue(i.sport, i.sportOther); }
+  function positionValue(i) { return otherValue(i.position, i.positionOther); }
+  // HISTORY_COLUMNS の順。「なし」のときは詳細を空欄にする（途中で切り替えた入力を残さない）
+  function historyValues(i) {
+    const inj = i.injury === YES, dis = i.disease === YES;
+    return [
+      i.hand, i.foot,
+      i.injury,
+      inj ? otherValue(i.injuryPart, i.injuryPartOther) : '',
+      inj ? otherValue(i.injuryType, i.injuryTypeOther) : '',
+      inj ? i.injuryNow : '',
+      i.disease,
+      dis ? i.diseaseName.trim() : '',
+      dis ? i.diseaseNow : '',
+    ];
+  }
+
+  // v1.0.0 で保存した行（既往歴などの列がない）を今の列に揃える
+  const HISTORY_AT = BASE_COLUMNS.indexOf(HISTORY_COLUMNS[0]);
+  function upgradeRow(row) {
+    if (row.length !== ALL_COLUMNS.length - HISTORY_COLUMNS.length) return row;
+    return [...row.slice(0, HISTORY_AT), ...HISTORY_COLUMNS.map(() => ''), ...row.slice(HISTORY_AT)];
+  }
 
   // ---------- お知らせ・ダイアログ ----------
   let toastTimer = null;
@@ -194,6 +221,37 @@
     $('#position-other').value = i.positionOther;
   }
 
+  // 1つ選ぶボタン。「その他」用の入力欄があれば、選んだときに開いてフォーカスする
+  function renderPick(sel, items, key, rerender, otherSel, otherKey) {
+    const i = state.info;
+    renderChoices($(sel), items, i[key], v => {
+      i[key] = v;
+      rerender();
+      saveDraft();
+      if (otherSel && v === OTHER) $(otherSel).focus();
+    });
+    if (otherSel) {
+      $(otherSel).hidden = i[key] !== OTHER;
+      $(otherSel).value = i[otherKey];
+    }
+  }
+  function renderLaterality() {
+    renderPick('#hand', LATERALITY, 'hand', renderLaterality);
+    renderPick('#foot', LATERALITY, 'foot', renderLaterality);
+  }
+  function renderHistory() {
+    const i = state.info;
+    renderPick('#injury', YES_NO, 'injury', renderHistory);
+    $('#injury-detail').hidden = i.injury !== YES;
+    renderPick('#injury-part', INJURY_PARTS, 'injuryPart', renderHistory, '#injury-part-other', 'injuryPartOther');
+    renderPick('#injury-type', INJURY_TYPES, 'injuryType', renderHistory, '#injury-type-other', 'injuryTypeOther');
+    renderPick('#injury-now', INJURY_NOW, 'injuryNow', renderHistory);
+    renderPick('#disease', YES_NO, 'disease', renderHistory);
+    $('#disease-detail').hidden = i.disease !== YES;
+    $('#disease-name').value = i.diseaseName;
+    renderPick('#disease-now', DISEASE_NOW, 'diseaseNow', renderHistory);
+  }
+
   function renderInfo() {
     const i = state.info;
     $('#name').value = i.name;
@@ -204,6 +262,8 @@
     renderSex();
     renderSport();
     renderPosition();
+    renderLaterality();
+    renderHistory();
     $('#btn-start').textContent = hasAnyCheck() ? 'チェックに戻る →' : 'チェック開始 →';
   }
 
@@ -243,6 +303,9 @@
     if (!p.position) { i.position = ''; i.positionOther = ''; }
     else if (known.includes(p.position)) { i.position = p.position; i.positionOther = ''; }
     else { i.position = OTHER; i.positionOther = p.position; }
+    // 既往歴は変わることがあるので毎回入力してもらう（候補には利き手・利き脚までしか残さない）
+    i.hand = LATERALITY.includes(p.hand) ? p.hand : '';
+    i.foot = LATERALITY.includes(p.foot) ? p.foot : '';
     $('#suggest').hidden = true;
     $('#name').blur();
     renderInfo();
@@ -263,6 +326,12 @@
     if (!i.sex) optional.push('性別');
     if (!i.sport) optional.push('種目');
     if (i.sport && !i.position) optional.push('ポジション');
+    if (!i.hand) optional.push('利き手');
+    if (!i.foot) optional.push('利き脚');
+    if (!i.injury) optional.push('ケガの有無');
+    else if (i.injury === YES && (!i.injuryPart || !i.injuryType || !i.injuryNow)) optional.push('ケガの詳細');
+    if (!i.disease) optional.push('疾患の有無');
+    else if (i.disease === YES && (!i.diseaseName.trim() || !i.diseaseNow)) optional.push('疾患の詳細');
     if (optional.length && !hasAnyCheck()) {
       const go = await confirmModal('未入力の項目があります',
         `<p><b>${optional.join('・')}</b> が未入力です。このまま進みますか？</p>`, 'このまま進む');
@@ -370,6 +439,10 @@
       age == null ? '' : `${age}歳`,
       i.sex,
       [sportValue(i), positionValue(i)].filter(Boolean).join(' / '),
+      i.hand ? `利き手 ${i.hand}` : '',
+      i.foot ? `利き脚 ${i.foot}` : '',
+      i.injury === YES ? 'ケガあり' : '',
+      i.disease === YES ? '疾患あり' : '',
     ].filter(Boolean).join('　');
     $('#person').innerHTML = `<span class="p-name">${esc(i.name)}</span><span class="p-meta">${esc(meta)}</span><span class="p-edit">✎ 修正</span>`;
   }
@@ -419,7 +492,7 @@
       const birth = birthText(i);
       const row = [
         id, fmtDateTime(now), settings.device, i.name, birth, calcAge(i.by, i.bm, i.bd, now),
-        i.sex, sportValue(i), positionValue(i),
+        i.sex, sportValue(i), positionValue(i), ...historyValues(i),
         ...MOTIONS.flatMap(m => { const c = chk(m.key); return [c.ok ? 1 : 0, c.d0 ? 1 : 0, c.d1 ? 1 : 0]; }),
       ];
       await DB.put('records', { id, name: i.name, measuredAt: fmtDateTime(now), status: 'unsent', row });
@@ -428,7 +501,7 @@
       const prev = people.find(p => p.key === key);
       const person = {
         key, name: i.name, birth: birth.replace(/\//g, '-'), sex: i.sex,
-        sport: sportValue(i), position: positionValue(i),
+        sport: sportValue(i), position: positionValue(i), hand: i.hand, foot: i.foot,
         lastDate: todayKey(), count: (prev ? prev.count || 0 : 0) + 1,
       };
       await DB.put('people', person);
@@ -475,7 +548,7 @@
   function errText(code) {
     return ({
       unauthorized: 'スプレッドシート側で合言葉が有効になっています。設定画面に合言葉を入力してください。',
-      header_mismatch: 'スプレッドシートの見出しの列が、アプリの項目と一致しません。',
+      header_mismatch: 'スプレッドシートの見出しの列が、アプリの項目と一致しません。アプリの更新で列が増えた場合は、スプレッドシートの「データ」シートの名前を変えて（例：データ_v1）から、もう一度送信してください。',
     })[code] || code || '送信に失敗しました。';
   }
 
@@ -495,7 +568,7 @@
     try {
       for (let s = 0; s < unsent.length; s += 25) {
         const batch = unsent.slice(s, s + 25);
-        const res = await post({ action: 'append', secret: settings.secret, header: ALL_COLUMNS, rows: batch.map(r => r.row) });
+        const res = await post({ action: 'append', secret: settings.secret, header: ALL_COLUMNS, rows: batch.map(r => upgradeRow(r.row)) });
         if (!res || !res.ok) throw new Error(errText(res && res.error));
         const ids = batch.map(r => r.id);
         if (settings.autoDelete) {
@@ -537,7 +610,7 @@
   // =========================================================
   async function exportXlsx(records) {
     if (!records.length) { toast('書き出すデータがありません'); return; }
-    const rows = records.slice().sort((a, b) => a.id.localeCompare(b.id)).map(r => r.row);
+    const rows = records.slice().sort((a, b) => a.id.localeCompare(b.id)).map(r => upgradeRow(r.row));
     const blob = XLSX.build(ALL_COLUMNS, rows, { sheetName: 'M-Test', frozenCols: 4 });
     const d = new Date();
     const name = `M-Test_${ymd(d)}_${pad(d.getHours())}${pad(d.getMinutes())}.xlsx`;
@@ -700,6 +773,9 @@
     $('#suggest').addEventListener('pointerdown', (e) => e.preventDefault());
     $('#sport-other').addEventListener('input', (e) => { state.info.sportOther = e.target.value; saveDraft(); });
     $('#position-other').addEventListener('input', (e) => { state.info.positionOther = e.target.value; saveDraft(); });
+    for (const [sel, key] of [['#injury-part-other', 'injuryPartOther'], ['#injury-type-other', 'injuryTypeOther'], ['#disease-name', 'diseaseName']]) {
+      $(sel).addEventListener('input', (e) => { state.info[key] = e.target.value; saveDraft(); });
+    }
     $('#btn-start').addEventListener('click', startCheck);
     $('#btn-clear').addEventListener('click', clearAll);
 
