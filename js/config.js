@@ -1,7 +1,7 @@
 // チェック項目・種目などの定義。
 // ここには秘密の情報（合言葉・GASのURL）を書かないこと。それらはiPadの設定画面で入力する。
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 
 // 部位ごとの動作。dirs は2つの方向ボタンのラベル。
 // column: 画面の左列(0)・右列(1)
@@ -73,8 +73,23 @@ const SPORTS = [
 const OTHER = 'その他';
 const POSITION_NONE = 'なし・未定';
 
+// 利き手・利き脚、既往歴（ケガ・疾患）の選択肢。「その他」を含むものは自由入力欄が出る。
+const LATERALITY = ['右', '左', '両'];
+const YES = 'あり';
+const YES_NO = ['なし', YES];
+const INJURY_PARTS = ['頸', '肩', '肘', '手首', '腰', '股', '膝', '足首', OTHER];
+const INJURY_TYPES = ['骨折', '捻挫', '肉離れ', '脱臼', '靱帯損傷', OTHER];
+const INJURY_NOW = ['完治', '治療中', 'リハビリ中', '痛みあり'];
+const DISEASE_NOW = ['完治', '治療中', '経過観察'];
+
 // スプレッドシート・Excelの列（1回の測定＝1行）
-const BASE_COLUMNS = ['測定番号', '測定日時', '端末', '氏名', '生年月日', '年齢', '性別', '種目', 'ポジション'];
+// HISTORY_COLUMNS は v1.1.0 で追加した列。v1.0.0 の行は、ポジションの後ろに空欄を入れて揃える。
+const HISTORY_COLUMNS = [
+  '利き手', '利き脚',
+  'ケガ_有無', 'ケガ_場所', 'ケガ_状態', 'ケガ_現在の状態',
+  '疾患_有無', '疾患名', '疾患_現在の状態',
+];
+const BASE_COLUMNS = ['測定番号', '測定日時', '端末', '氏名', '生年月日', '年齢', '性別', '種目', 'ポジション', ...HISTORY_COLUMNS];
 const CHECK_COLUMNS = MOTIONS.flatMap(m => [
   `${m.key}_確認済`,
   `${m.key}_${m.dirs[0]}`,

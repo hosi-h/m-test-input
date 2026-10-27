@@ -1,6 +1,6 @@
 // iPad本体への保存（IndexedDB）。
 // records: 測定データ（送信待ち・送信済）
-// people : 候補表示用の基本情報（氏名・生年月日・性別・種目・ポジション）
+// people : 候補表示用の基本情報（氏名・生年月日・性別・種目・ポジション・利き手・利き脚）
 
 const DB = (() => {
   const NAME = 'mtest-input';

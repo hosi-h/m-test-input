@@ -110,6 +110,14 @@ input:focus, select:focus { outline: 2px solid var(--ok); outline-offset: 0; }
 .choice.on { background: var(--sel); border-color: var(--sel); color: #fff; font-weight: 700; }
 .other-input { margin-top: 8px; max-width: 360px; }
 .hint { color: var(--muted); padding-top: 12px; }
+.section-title { font-size: 19px; margin: 24px 0 4px; padding-top: 4px; color: var(--navy); }
+.sub {
+  display: grid; gap: 10px; margin-top: 10px; padding: 12px 14px;
+  background: #f6f8fb; border-radius: 8px;
+}
+.sub-row { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: start; }
+.sub-label { font-weight: 600; font-size: 15px; color: #3b4754; padding-top: 13px; }
+.sub .other-input, #disease-name { max-width: 360px; }
 .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
 
 /* ---------- チェック ---------- */
@@ -213,6 +221,8 @@ input:focus, select:focus { outline: 2px solid var(--ok); outline-offset: 0; }
   main { padding: 12px; }
   .field { grid-template-columns: 1fr; gap: 4px; }
   .field > label, .field > .label { padding-top: 0; }
+  .sub-row { grid-template-columns: 1fr; gap: 4px; }
+  .sub-label { padding-top: 0; }
   .brand { font-size: 16px; }
   .net { display: none; }
   .tg.ok { min-width: 72px; }
