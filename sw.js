@@ -16,7 +16,9 @@ const FILES = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // ブラウザの通常のキャッシュを通さず、必ずサーバーから最新のファイルを取ってくる
+  const reqs = FILES.map(f => new Request(f, { cache: 'reload' }));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(reqs)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
